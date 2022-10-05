@@ -1,11 +1,29 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'allure-aks-upload-action'
+description: 'GH Action to upload allure-results to Allure Docker API'
+author: 'Jacqueline Wagner'
 inputs:
-  milliseconds: # change this
+  allure_results_directory:
+    description: "Directory where the results are stored locally"
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    default: "/allure-results"
+  allure_server:
+    description: "URL for the Allure API Container"
+    required: true
+    default: "http://10.90.2.5:6060/allure-api"
+  allure_user:
+    description: "Admin User for Allure API Container"
+    required: true
+    default: "allure_admin"
+  allure_password:
+    description: "Admin Password for the Admin User"
+    required: true
+  project_id:
+    description: "Project ID according to the existent project in the allure container"
+    required: true
+    default: "not_set"
+outputs:
+  report_url:
+    description: "URL of the generated report"
 runs:
   using: 'node16'
   main: 'dist/index.js'

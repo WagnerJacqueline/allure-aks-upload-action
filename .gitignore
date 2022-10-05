@@ -99,3 +99,5 @@ __tests__/runner/*
 lib/**/*
 
 .idea
+# result folders for local testing
+lib/allure-*
