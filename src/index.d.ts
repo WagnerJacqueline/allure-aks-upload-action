@@ -1,5 +1,6 @@
 /* eslint-disable no-var */
 declare global {
+  var github_server_url: string
   var github_repository: string
   var github_repository_owner: string
   var github_run_num: string

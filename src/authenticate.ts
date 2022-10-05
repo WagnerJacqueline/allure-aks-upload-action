@@ -34,6 +34,12 @@ export async function authenticate(): Promise<string | undefined> {
       ?.filter(e => e.toString().includes('csrf_access_token'))
       .at(0)
   } catch (error) {
-    return `An unexpected error occurred: ${error}`
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
+    }
   }
 }

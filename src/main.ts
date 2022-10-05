@@ -6,32 +6,37 @@ import {authenticate} from './authenticate'
 
 async function run(): Promise<void> {
   try {
-    // global.github_repository = core.getInput('GITHUB_REPOSITORY')
-    global.github_repository = 'DedalusTestDIIT/test-dicom'
-    // global.github_repository_owner = core.getInput('GITHUB_REPOSITORY_OWNER')
-    global.github_repository_owner = 'DedalusTestDIIT'
-    // global.github_run_num = core.getInput('GITHUB_RUN_NUMBER')
-    global.github_run_num = '12345'
-    // global.github_run_id = core.getInput('GITHUB_RUN_ID')
-    global.github_run_id = '98765'
-    //global.allure_results_directory = core.getInput('INPUT_ALLURE_RESULTS_DIRECTORY')
-    global.allure_results_directory = 'allure-results-alone'
-    // global.allure_server = core.getInput('INPUT_ALLURE_SERVER')
-    global.allure_server = 'http://10.90.2.5:6060/allure-api'
-    // global.project_id = core.getInput('INPUT_PROJECT_ID')
-    global.project_id = 'test-custom-local-ts'
+    global.github_server_url = core.getInput('GITHUB_SERVER_URL')
+    // global.github_server_url = 'https://test-github.com'
+    global.github_repository = core.getInput('GITHUB_REPOSITORY')
+    // global.github_repository = 'DedalusTestDIIT/test-dicom'
+    global.github_repository_owner = core.getInput('GITHUB_REPOSITORY_OWNER')
+    // global.github_repository_owner = 'DedalusTestDIIT'
+    global.github_run_num = core.getInput('GITHUB_RUN_NUMBER')
+    // global.github_run_num = '12345'
+    global.github_run_id = core.getInput('GITHUB_RUN_ID')
+    // global.github_run_id = '98765'
+    global.allure_results_directory = core.getInput(
+      'INPUT_ALLURE_RESULTS_DIRECTORY'
+    )
+    // global.allure_results_directory = 'allure-results'
+    global.allure_server = core.getInput('INPUT_ALLURE_SERVER')
+    // global.allure_server = 'http://10.90.2.5:6060/allure-api'
+    global.project_id = core.getInput('INPUT_PROJECT_ID')
+    // global.project_id = 'test-custom-local-ts'
+    // global.project_id = 'not-set'
 
-    // global.security_user = core.getInput('INPUT_ALLURE_USER')
-    global.security_user = 'allure_admin'
-    // global.security_password = core.getInput('INPUT_ALLURE_PASSWORD')
-    global.security_password = ''
+    global.security_user = core.getInput('INPUT_ALLURE_USER')
+    // global.security_user = 'allure_admin'
+    global.security_password = core.getInput('INPUT_ALLURE_PASSWORD')
+    // global.security_password = 'Admin#9364'
     const temp_token = await authenticate()
     if (temp_token !== undefined) {
       global.csrf_access_token = temp_token.split(';').at(0) || 'undefined'
     } else global.csrf_access_token = 'undefined'
 
-    //global.workspace = `${path.sep}github${path.sep}workspace`
-    global.workspace = __dirname
+    global.workspace = `${path.sep}github${path.sep}workspace`
+    // global.workspace = __dirname
 
     global.results_directory = path.join(
       global.workspace,
@@ -46,20 +51,29 @@ async function run(): Promise<void> {
 
     core.debug(`# of dirs is: ${directoriesInDirectory.length}`)
 
+    const repo = global.github_repository.split('/').at(1)
+    let report_url
+
     if (directoriesInDirectory.length > 0) {
       for (const dir of directoriesInDirectory) {
-        //await create(dir.toString())
-        await uploadResults(dir)
+        global.project_id = `${repo}-${dir}`
+        await uploadResults(
+          path.join(global.workspace, global.allure_results_directory, dir)
+        )
+        report_url = await generateReport()
+        core.setOutput('report_url', `report_url for ${dir}: ${report_url}`)
       }
     } else {
-      //await create(global.results_directory.toString())
+      if (global.project_id === 'not-set') {
+        global.project_id = `${repo}`
+      }
       await uploadResults(global.results_directory)
-      await generateReport()
+      report_url = await generateReport()
+      core.setOutput('report_url', report_url)
     }
-
-    core.setOutput('report_url', new Date().toTimeString())
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
+    else core.error(`error: ${error}`)
   }
 }
 

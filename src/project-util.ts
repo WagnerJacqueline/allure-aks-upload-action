@@ -5,11 +5,7 @@ import {readdir, lstat} from 'fs/promises'
 import {readFileSync} from 'fs'
 import path from 'path'
 
-export async function create(name: string): Promise<string> {
-  if (global.project_id === 'not_set') {
-    global.project_id = name // + @TODO github action repo name
-  }
-
+export async function create(): Promise<string> {
   try {
     const resp: AxiosResponse = await axios.post(
       `${global.allure_server}/allure-docker-service/projects`,
@@ -21,14 +17,20 @@ export async function create(name: string): Promise<string> {
 
     return `${resp.status}|${resp.data['meta_data'].message}`
   } catch (error) {
-    return `An unexpected error occurred: ${error}`
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
+    }
   }
 }
 export async function uploadResults(directory: string): Promise<string> {
   const files = await readdir(directory)
   const results: ResultEntity[] = []
   for (const file of files) {
-    const file_path = path.join(global.results_directory, file)
+    const file_path = path.join(directory, file)
     const stat = await lstat(file_path)
     if (stat.isFile()) {
       const fileSync = readFileSync(file_path, 'utf-8')
@@ -42,16 +44,26 @@ export async function uploadResults(directory: string): Promise<string> {
     }
   }
   const results_json: Results = {results}
-  await axios.post(
-    `${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
-    JSON.stringify(results_json),
-    {
-      headers: {
-        'Content-Type': 'application/json'
+  try {
+    await axios.post(
+      `${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
+      JSON.stringify(results_json),
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
+    )
+    return directory
+  } catch (error) {
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
     }
-  )
-  return directory
+  }
 }
 /*export async function uploadFiles(directory: string): Promise<string> {
   const files = await readdir(directory)
@@ -79,13 +91,23 @@ export async function uploadResults(directory: string): Promise<string> {
 }*/
 
 export async function generateReport(): Promise<string> {
+  const execution_name = `Github Actions ${global.project_id} #${global.github_run_num}`
+  const execution_from = `${global.github_server_url}/${global.github_repository}/actions/runs/${global.github_run_id}`
+  const execution_type = 'github'
   try {
     const resp: AxiosResponse = await axios.get(
-      `${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}`
+      `${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`
     )
-    return resp.statusText
+    core.debug(`report url is ${resp.data.data.report_url}`)
+    return resp.data.data.report_url
   } catch (error) {
-    return `An unexpected error occurred: ${error}`
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
+    }
   }
 }
 
