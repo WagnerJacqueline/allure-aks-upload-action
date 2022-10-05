@@ -58,7 +58,14 @@ function authenticate() {
             return (_b = headers['set-cookie']) === null || _b === void 0 ? void 0 : _b.filter(e => e.toString().includes('csrf_access_token')).at(0);
         }
         catch (error) {
-            return `An unexpected error occurred: ${error}`;
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+                return `error: ${error}`;
+            }
+            else {
+                core.error(`error: ${error}`);
+                return `error: ${error}`;
+            }
         }
     });
 }
@@ -174,32 +181,35 @@ const authenticate_1 = __nccwpck_require__(2601);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // global.github_repository = core.getInput('GITHUB_REPOSITORY')
-            global.github_repository = 'DedalusTestDIIT/test-dicom';
-            // global.github_repository_owner = core.getInput('GITHUB_REPOSITORY_OWNER')
-            global.github_repository_owner = 'DedalusTestDIIT';
-            // global.github_run_num = core.getInput('GITHUB_RUN_NUMBER')
-            global.github_run_num = '12345';
-            // global.github_run_id = core.getInput('GITHUB_RUN_ID')
-            global.github_run_id = '98765';
-            //global.allure_results_directory = core.getInput('INPUT_ALLURE_RESULTS_DIRECTORY')
-            global.allure_results_directory = 'allure-results-alone';
-            // global.allure_server = core.getInput('INPUT_ALLURE_SERVER')
-            global.allure_server = 'http://10.90.2.5:6060/allure-api';
-            // global.project_id = core.getInput('INPUT_PROJECT_ID')
-            global.project_id = 'test-custom-local-ts';
-            // global.security_user = core.getInput('INPUT_ALLURE_USER')
-            global.security_user = 'allure_admin';
-            // global.security_password = core.getInput('INPUT_ALLURE_PASSWORD')
-            global.security_password = 'Admin#9364';
+            global.github_server_url = core.getInput('GITHUB_SERVER_URL');
+            // global.github_server_url = 'https://test-github.com'
+            global.github_repository = core.getInput('GITHUB_REPOSITORY');
+            // global.github_repository = 'DedalusTestDIIT/test-dicom'
+            global.github_repository_owner = core.getInput('GITHUB_REPOSITORY_OWNER');
+            // global.github_repository_owner = 'DedalusTestDIIT'
+            global.github_run_num = core.getInput('GITHUB_RUN_NUMBER');
+            // global.github_run_num = '12345'
+            global.github_run_id = core.getInput('GITHUB_RUN_ID');
+            // global.github_run_id = '98765'
+            global.allure_results_directory = core.getInput('INPUT_ALLURE_RESULTS_DIRECTORY');
+            // global.allure_results_directory = 'allure-results'
+            global.allure_server = core.getInput('INPUT_ALLURE_SERVER');
+            // global.allure_server = 'http://10.90.2.5:6060/allure-api'
+            global.project_id = core.getInput('INPUT_PROJECT_ID');
+            // global.project_id = 'test-custom-local-ts'
+            // global.project_id = 'not-set'
+            global.security_user = core.getInput('INPUT_ALLURE_USER');
+            // global.security_user = 'allure_admin'
+            global.security_password = core.getInput('INPUT_ALLURE_PASSWORD');
+            // global.security_password = 'Admin#9364'
             const temp_token = yield (0, authenticate_1.authenticate)();
             if (temp_token !== undefined) {
                 global.csrf_access_token = temp_token.split(';').at(0) || 'undefined';
             }
             else
                 global.csrf_access_token = 'undefined';
-            //global.workspace = `${path.sep}github${path.sep}workspace`
-            global.workspace = __dirname;
+            global.workspace = `${path_1.default.sep}github${path_1.default.sep}workspace`;
+            // global.workspace = __dirname
             global.results_directory = path_1.default.join(global.workspace, global.allure_results_directory);
             const directoriesInDirectory = (0, fs_1.readdirSync)(global.results_directory, {
                 withFileTypes: true
@@ -207,22 +217,30 @@ function run() {
                 .filter((item) => item.isDirectory())
                 .map(item => item.name);
             core.debug(`# of dirs is: ${directoriesInDirectory.length}`);
+            const repo = global.github_repository.split('/').at(1);
+            let report_url;
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
-                    //await create(dir.toString())
-                    yield (0, project_util_1.uploadResults)(dir);
+                    global.project_id = `${repo}-${dir}`;
+                    yield (0, project_util_1.uploadResults)(path_1.default.join(global.workspace, global.allure_results_directory, dir));
+                    report_url = yield (0, project_util_1.generateReport)();
+                    core.setOutput('report_url', `report_url for ${dir}: ${report_url}`);
                 }
             }
             else {
-                //await create(global.results_directory.toString())
+                if (global.project_id === 'not-set') {
+                    global.project_id = `${repo}`;
+                }
                 yield (0, project_util_1.uploadResults)(global.results_directory);
-                yield (0, project_util_1.generateReport)();
+                report_url = yield (0, project_util_1.generateReport)();
+                core.setOutput('report_url', report_url);
             }
-            core.setOutput('report_url', new Date().toTimeString());
         }
         catch (error) {
             if (error instanceof Error)
                 core.setFailed(error.message);
+            else
+                core.error(`error: ${error}`);
         }
     });
 }
@@ -278,18 +296,22 @@ const core = __importStar(__nccwpck_require__(2186));
 const promises_1 = __nccwpck_require__(3292);
 const fs_1 = __nccwpck_require__(7147);
 const path_1 = __importDefault(__nccwpck_require__(1017));
-function create(name) {
+function create() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (global.project_id === 'not_set') {
-            global.project_id = name; // + @TODO github action repo name
-        }
         try {
             const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/projects`, { id: global.project_id });
             core.debug(`response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message} | return: ${resp.status}|${resp.data['meta_data'].message}`);
             return `${resp.status}|${resp.data['meta_data'].message}`;
         }
         catch (error) {
-            return `An unexpected error occurred: ${error}`;
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+                return `error: ${error}`;
+            }
+            else {
+                core.error(`error: ${error}`);
+                return `error: ${error}`;
+            }
         }
     });
 }
@@ -299,7 +321,7 @@ function uploadResults(directory) {
         const files = yield (0, promises_1.readdir)(directory);
         const results = [];
         for (const file of files) {
-            const file_path = path_1.default.join(global.results_directory, file);
+            const file_path = path_1.default.join(directory, file);
             const stat = yield (0, promises_1.lstat)(file_path);
             if (stat.isFile()) {
                 const fileSync = (0, fs_1.readFileSync)(file_path, 'utf-8');
@@ -313,13 +335,25 @@ function uploadResults(directory) {
             }
         }
         const results_json = { results };
-        yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
-        JSON.stringify(results_json), {
-            headers: {
-                'Content-Type': 'application/json'
+        try {
+            yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
+            JSON.stringify(results_json), {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return directory;
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+                return `error: ${error}`;
             }
-        });
-        return directory;
+            else {
+                core.error(`error: ${error}`);
+                return `error: ${error}`;
+            }
+        }
     });
 }
 exports.uploadResults = uploadResults;
@@ -349,12 +383,23 @@ exports.uploadResults = uploadResults;
 }*/
 function generateReport() {
     return __awaiter(this, void 0, void 0, function* () {
+        const execution_name = `Github Actions ${global.project_id} #${global.github_run_num}`;
+        const execution_from = `${global.github_server_url}/${global.github_repository}/actions/runs/${global.github_run_id}`;
+        const execution_type = 'github';
         try {
-            const resp = yield axios_handler_1.default.get(`${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}`);
-            return resp.statusText;
+            const resp = yield axios_handler_1.default.get(`${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`);
+            core.debug(`report url is ${resp.data.data.report_url}`);
+            return resp.data.data.report_url;
         }
         catch (error) {
-            return `An unexpected error occurred: ${error}`;
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+                return `error: ${error}`;
+            }
+            else {
+                core.error(`error: ${error}`);
+                return `error: ${error}`;
+            }
         }
     });
 }
