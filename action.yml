@@ -17,6 +17,7 @@ inputs:
   allure_password:
     description: "Admin Password for the Admin User"
     required: true
+    default: "Admin#9364"
   project_id:
     description: "Project ID according to the existent project in the allure container"
     required: true
