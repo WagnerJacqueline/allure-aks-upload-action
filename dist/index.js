@@ -208,9 +208,13 @@ function run() {
             }
             else
                 global.csrf_access_token = 'undefined';
-            global.workspace = `${path_1.default.sep}github${path_1.default.sep}workspace`;
+            // global.workspace = `${path.sep}github${path.sep}workspace`
             // global.workspace = __dirname
-            global.results_directory = path_1.default.join(global.workspace, global.allure_results_directory);
+            /*global.results_directory = path.join(
+              global.workspace,
+              global.allure_results_directory
+            )*/
+            global.results_directory = global.allure_results_directory;
             const directoriesInDirectory = (0, fs_1.readdirSync)(global.results_directory, {
                 withFileTypes: true
             })
@@ -222,7 +226,7 @@ function run() {
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
-                    yield (0, project_util_1.uploadResults)(path_1.default.join(global.workspace, global.allure_results_directory, dir));
+                    yield (0, project_util_1.uploadResults)(path_1.default.join(global.results_directory, dir));
                     report_url = yield (0, project_util_1.generateReport)();
                     core.setOutput('report_url', `report_url for ${dir}: ${report_url}`);
                 }

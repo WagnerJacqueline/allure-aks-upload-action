@@ -35,13 +35,14 @@ async function run(): Promise<void> {
       global.csrf_access_token = temp_token.split(';').at(0) || 'undefined'
     } else global.csrf_access_token = 'undefined'
 
-    global.workspace = `${path.sep}github${path.sep}workspace`
+    // global.workspace = `${path.sep}github${path.sep}workspace`
     // global.workspace = __dirname
 
-    global.results_directory = path.join(
+    /*global.results_directory = path.join(
       global.workspace,
       global.allure_results_directory
-    )
+    )*/
+    global.results_directory = global.allure_results_directory
 
     const directoriesInDirectory = readdirSync(global.results_directory, {
       withFileTypes: true
@@ -57,9 +58,7 @@ async function run(): Promise<void> {
     if (directoriesInDirectory.length > 0) {
       for (const dir of directoriesInDirectory) {
         global.project_id = `${repo}-${dir}`
-        await uploadResults(
-          path.join(global.workspace, global.allure_results_directory, dir)
-        )
+        await uploadResults(path.join(global.results_directory, dir))
         report_url = await generateReport()
         core.setOutput('report_url', `report_url for ${dir}: ${report_url}`)
       }
