@@ -48,6 +48,7 @@ const core = __importStar(__nccwpck_require__(2186));
 function authenticate() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+        core.debug(`start authenticate`);
         try {
             const { data, headers, status } = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/login`, { username: global.security_user, password: global.security_password });
             core.debug(JSON.stringify(data, null, 4));
@@ -183,25 +184,35 @@ function run() {
         try {
             global.github_server_url = core.getInput('GITHUB_SERVER_URL');
             // global.github_server_url = 'https://test-github.com'
+            core.debug(`github_server_url is: ${global.github_server_url}`);
             global.github_repository = core.getInput('GITHUB_REPOSITORY');
             // global.github_repository = 'DedalusTestDIIT/test-dicom'
+            core.debug(`github_repository is: ${global.github_repository}`);
             global.github_repository_owner = core.getInput('GITHUB_REPOSITORY_OWNER');
             // global.github_repository_owner = 'DedalusTestDIIT'
+            core.debug(`github_repository_owner is: ${global.github_repository_owner}`);
             global.github_run_num = core.getInput('GITHUB_RUN_NUMBER');
             // global.github_run_num = '12345'
+            core.debug(`github_run_num is: ${global.github_run_num}`);
             global.github_run_id = core.getInput('GITHUB_RUN_ID');
             // global.github_run_id = '98765'
+            core.debug(`github_run_id is: ${global.github_run_id}`);
             global.allure_results_directory = core.getInput('INPUT_ALLURE_RESULTS_DIRECTORY');
             // global.allure_results_directory = 'allure-results'
+            core.debug(`allure_results_directory is: ${global.allure_results_directory}`);
             global.allure_server = core.getInput('INPUT_ALLURE_SERVER');
             // global.allure_server = 'http://10.90.2.5:6060/allure-api'
+            core.debug(`allure_server is: ${global.allure_server}`);
             global.project_id = core.getInput('INPUT_PROJECT_ID');
             // global.project_id = 'test-custom-local-ts'
             // global.project_id = 'not-set'
+            core.debug(`project_id is: ${global.project_id}`);
             global.security_user = core.getInput('INPUT_ALLURE_USER');
             // global.security_user = 'allure_admin'
+            core.debug(`allure_user is: ${global.security_user}`);
             global.security_password = core.getInput('INPUT_ALLURE_PASSWORD');
             // global.security_password = 'Admin#9364'
+            core.debug(`password is: ${global.security_password}`);
             const temp_token = yield (0, authenticate_1.authenticate)();
             if (temp_token !== undefined) {
                 global.csrf_access_token = temp_token.split(';').at(0) || 'undefined';

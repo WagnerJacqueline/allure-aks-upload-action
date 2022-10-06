@@ -18,6 +18,7 @@ export type AuthenticationResponse = {
 }
 
 export async function authenticate(): Promise<string | undefined> {
+  core.debug(`start authenticate`)
   try {
     const {data, headers, status} = await axios.post<AuthenticationResponse>(
       `${global.allure_server}/allure-docker-service/login`,
