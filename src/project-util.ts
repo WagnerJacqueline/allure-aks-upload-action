@@ -1,6 +1,6 @@
 import axios from './axios-handler'
 import * as core from '@actions/core'
-import {AxiosResponse} from 'axios'
+import type {AxiosResponse} from 'axios'
 import {readdir, lstat} from 'fs/promises'
 import {readFileSync} from 'fs'
 import path from 'path'
