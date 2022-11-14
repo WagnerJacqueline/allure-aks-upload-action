@@ -23,6 +23,7 @@ async function run(): Promise<void> {
       for (const dir of directoriesInDirectory) {
         global.project_id = `${repo}-${dir}`
         await uploadResults(path.join(global.results_directory, dir))
+        core.debug(`finished upload of ${dir}`)
         report_url = `${dir}-${report_url + (await generateReport())}|\n`
       }
     } else {

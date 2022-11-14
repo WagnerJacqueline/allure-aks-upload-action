@@ -197,6 +197,7 @@ function run() {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
                     yield (0, project_util_1.uploadResults)(path_1.default.join(global.results_directory, dir));
+                    core.debug(`finished upload of ${dir}`);
                     report_url = `${dir}-${report_url + (yield (0, project_util_1.generateReport)())}|\n`;
                 }
             }
@@ -407,6 +408,7 @@ const path_1 = __importDefault(__nccwpck_require__(1017));
 }*/
 function uploadResults(directory) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.debug(`currently in dir ${directory}`);
         const files = yield (0, promises_1.readdir)(directory);
         const results = [];
         for (const file of files) {
@@ -424,6 +426,7 @@ function uploadResults(directory) {
             }
         }
         const results_json = { results };
+        core.debug(`number of results is ${results.length}`);
         try {
             const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
             JSON.stringify(results_json), {

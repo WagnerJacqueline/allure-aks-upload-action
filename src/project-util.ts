@@ -27,6 +27,7 @@ import path from 'path'
   }
 }*/
 export async function uploadResults(directory: string): Promise<string> {
+  core.debug(`currently in dir ${directory}`)
   const files = await readdir(directory)
   const results: ResultEntity[] = []
   for (const file of files) {
@@ -44,6 +45,7 @@ export async function uploadResults(directory: string): Promise<string> {
     }
   }
   const results_json: Results = {results}
+  core.debug(`number of results is ${results.length}`)
   try {
     const resp: AxiosResponse = await axios.post(
       `${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
