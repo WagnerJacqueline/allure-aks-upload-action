@@ -1,11 +1,11 @@
 import axios from './axios-handler'
 import * as core from '@actions/core'
 import type {AxiosResponse} from 'axios'
-import {readdir, lstat} from 'fs/promises'
+import {lstat, readdir} from 'fs/promises'
 import {readFileSync} from 'fs'
 import path from 'path'
 
-export async function create(): Promise<string> {
+/*export async function create(): Promise<string> {
   try {
     const resp: AxiosResponse = await axios.post(
       `${global.allure_server}/allure-docker-service/projects`,
@@ -16,7 +16,7 @@ export async function create(): Promise<string> {
     )
 
     return `${resp.status}|${resp.data['meta_data'].message}`
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       core.setFailed(error.message)
       return `error: ${error}`
@@ -25,7 +25,7 @@ export async function create(): Promise<string> {
       return `error: ${error}`
     }
   }
-}
+}*/
 export async function uploadResults(directory: string): Promise<string> {
   const files = await readdir(directory)
   const results: ResultEntity[] = []
@@ -54,11 +54,11 @@ export async function uploadResults(directory: string): Promise<string> {
         }
       }
     )
-    core.debug(
-      `response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`
-    )
+    core.debug(`upload response status is: ${resp.status}`)
+    if (resp.status === 200)
+      core.debug(`meta: ${resp.data['meta_data'].message}`)
     return directory
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       core.setFailed(error.message)
       return `error: ${error}`
@@ -94,19 +94,24 @@ export async function uploadResults(directory: string): Promise<string> {
 }*/
 
 export async function generateReport(): Promise<string> {
-  const execution_name = `Github Actions ${global.project_id} #${global.github_run_num}`
-  const execution_from = `${global.github_server_url}/${global.github_repository}/actions/runs/${global.github_run_id}`
+  const execution_name = encodeURIComponent(
+    `${global.project_id} #${global.github_run_num}`
+  )
+
+  const execution_from = encodeURIComponent(
+    `${global.github_server_url}/${global.github_repository}/actions/runs/${global.github_run_id}`
+  )
   const execution_type = 'github'
+
+  const url = `${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`
   try {
-    const resp: AxiosResponse = await axios.get(
-      `${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`
-    )
-    core.debug(
-        `response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`
-    )
+    const resp: AxiosResponse = await axios.get(url)
+    core.debug(`generate response status is: ${resp.status}`)
+    if (resp.status === 200)
+      core.debug(`meta: ${resp.data['meta_data'].message}`)
     core.debug(`report url is ${resp.data.data.report_url}`)
     return resp.data.data.report_url
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       core.setFailed(error.message)
       return `error: ${error}`

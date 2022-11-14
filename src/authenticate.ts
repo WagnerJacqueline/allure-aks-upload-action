@@ -25,16 +25,16 @@ export async function authenticate(): Promise<string | undefined> {
       {username: global.security_user, password: global.security_password}
     )
 
-    core.debug(JSON.stringify(data, null, 4))
-    core.debug(JSON.stringify(headers, null, 4))
+    //core.debug(JSON.stringify(data, null, 4))
+    //core.debug(JSON.stringify(headers, null, 4))
 
     core.debug(`authentication response status is: ${status}`)
-    core.debug(`access token is: ${data.data.access_token}`)
+    if (status === 200) core.debug(`access token is: ${data.data.access_token}`)
     global.csrf_access_token_cookie = headers['set-cookie']?.at(0) as string
     return headers['set-cookie']
       ?.filter(e => e.toString().includes('csrf_access_token'))
       .at(0)
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       core.setFailed(error.message)
       return `error: ${error}`

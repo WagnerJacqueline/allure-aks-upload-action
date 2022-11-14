@@ -51,10 +51,11 @@ function authenticate() {
         core.debug(`start authenticate`);
         try {
             const { data, headers, status } = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/login`, { username: global.security_user, password: global.security_password });
-            core.debug(JSON.stringify(data, null, 4));
-            core.debug(JSON.stringify(headers, null, 4));
+            //core.debug(JSON.stringify(data, null, 4))
+            //core.debug(JSON.stringify(headers, null, 4))
             core.debug(`authentication response status is: ${status}`);
-            core.debug(`access token is: ${data.data.access_token}`);
+            if (status === 200)
+                core.debug(`access token is: ${data.data.access_token}`);
             global.csrf_access_token_cookie = (_a = headers['set-cookie']) === null || _a === void 0 ? void 0 : _a.at(0);
             return (_b = headers['set-cookie']) === null || _b === void 0 ? void 0 : _b.filter(e => e.toString().includes('csrf_access_token')).at(0);
         }
@@ -178,55 +179,12 @@ const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __nccwpck_require__(7147);
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const project_util_1 = __nccwpck_require__(4110);
-const authenticate_1 = __nccwpck_require__(2601);
+const prepare_1 = __nccwpck_require__(8837);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            global.github_server_url = process.env.GITHUB_SERVER_URL;
-            // global.github_server_url = 'https://test-github.com'
-            core.info(`github_server_url is: ${global.github_server_url}`);
-            global.github_repository = process.env.GITHUB_REPOSITORY;
-            // global.github_repository = 'DedalusTestDIIT/test-dicom'
-            core.info(`github_repository is: ${global.github_repository}`);
-            global.github_repository_owner = process.env
-                .GITHUB_REPOSITORY_OWNER;
-            // global.github_repository_owner = 'DedalusTestDIIT'
-            core.info(`github_repository_owner is: ${global.github_repository_owner}`);
-            global.github_run_num = process.env.GITHUB_RUN_NUMBER;
-            // global.github_run_num = '12345'
-            core.info(`github_run_num is: ${global.github_run_num}`);
-            global.github_run_id = process.env.GITHUB_RUN_ID;
-            // global.github_run_id = '98765'
-            core.info(`github_run_id is: ${global.github_run_id}`);
-            global.allure_results_directory = core.getInput('allure_results_directory');
-            // global.allure_results_directory = 'allure-results'
-            core.info(`allure_results_directory is: ${global.allure_results_directory}`);
-            global.allure_server = core.getInput('allure_server');
-            // global.allure_server = 'http://10.90.2.5:6060/allure-api'
-            core.info(`allure_server is: ${global.allure_server}`);
-            global.project_id = core.getInput('project_id');
-            // global.project_id = 'test-custom-local-ts'
-            // global.project_id = 'not-set'
-            core.info(`project_id is: ${global.project_id}`);
-            global.security_user = core.getInput('allure_user');
-            // global.security_user = 'allure_admin'
-            core.info(`allure_user is: ${global.security_user}`);
-            global.security_password = core.getInput('allure_password');
-            // global.security_password = 'Admin#9364'
-            core.debug(`password is: ${global.security_password}`);
-            const temp_token = yield (0, authenticate_1.authenticate)();
-            if (temp_token !== undefined) {
-                global.csrf_access_token = temp_token.split(';').at(0) || 'undefined';
-            }
-            else
-                global.csrf_access_token = 'undefined';
-            // global.workspace = `${path.sep}github${path.sep}workspace`
-            // global.workspace = __dirname
-            /*global.results_directory = path.join(
-              global.workspace,
-              global.allure_results_directory
-            )*/
-            global.results_directory = global.allure_results_directory;
+            yield (0, prepare_1.prepareGH)();
+            //await prepareLocal()
             const directoriesInDirectory = (0, fs_1.readdirSync)(global.results_directory, {
                 withFileTypes: true
             })
@@ -239,7 +197,7 @@ function run() {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
                     yield (0, project_util_1.uploadResults)(path_1.default.join(global.results_directory, dir));
-                    report_url = `${report_url + (yield (0, project_util_1.generateReport)())} - ${dir}| `;
+                    report_url = `${dir}-${report_url + (yield (0, project_util_1.generateReport)())}|\n`;
                 }
             }
             else {
@@ -261,6 +219,121 @@ function run() {
 }
 run();
 //# sourceMappingURL=main.js.map
+
+/***/ }),
+
+/***/ 8837:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.prepareLocal = exports.prepareGH = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const authenticate_1 = __nccwpck_require__(2601);
+const path_1 = __importDefault(__nccwpck_require__(1017));
+function prepareGH() {
+    return __awaiter(this, void 0, void 0, function* () {
+        global.github_server_url = process.env.GITHUB_SERVER_URL;
+        core.info(`github_server_url is: ${global.github_server_url}`);
+        global.github_repository = process.env.GITHUB_REPOSITORY;
+        core.info(`github_repository is: ${global.github_repository}`);
+        global.github_repository_owner = process.env.GITHUB_REPOSITORY_OWNER;
+        core.info(`github_repository_owner is: ${global.github_repository_owner}`);
+        global.github_run_num = process.env.GITHUB_RUN_NUMBER;
+        core.info(`github_run_num is: ${global.github_run_num}`);
+        global.github_run_id = process.env.GITHUB_RUN_ID;
+        core.info(`github_run_id is: ${global.github_run_id}`);
+        global.allure_results_directory = core.getInput('allure_results_directory');
+        core.info(`allure_results_directory is: ${global.allure_results_directory}`);
+        global.allure_server = core.getInput('allure_server');
+        core.info(`allure_server is: ${global.allure_server}`);
+        global.project_id = core.getInput('project_id');
+        core.info(`project_id is: ${global.project_id}`);
+        global.security_user = core.getInput('allure_user');
+        core.info(`allure_user is: ${global.security_user}`);
+        global.security_password = core.getInput('allure_password');
+        core.debug(`password is: ${global.security_password}`);
+        const temp_token = yield (0, authenticate_1.authenticate)();
+        if (temp_token !== undefined) {
+            global.csrf_access_token = temp_token.split(';').at(0) || 'undefined';
+        }
+        else
+            global.csrf_access_token = 'undefined';
+        global.results_directory = global.allure_results_directory;
+    });
+}
+exports.prepareGH = prepareGH;
+function prepareLocal() {
+    return __awaiter(this, void 0, void 0, function* () {
+        global.github_server_url = 'https://test-github.com';
+        core.info(`github_server_url is: ${global.github_server_url}`);
+        global.github_repository = 'DedalusTestDIIT/presentation-dicom';
+        core.info(`github_repository is: ${global.github_repository}`);
+        global.github_repository_owner = 'DedalusTestDIIT';
+        core.info(`github_repository_owner is: ${global.github_repository_owner}`);
+        global.github_run_num = '3135';
+        core.info(`github_run_num is: ${global.github_run_num}`);
+        global.github_run_id = '3460256272';
+        core.info(`github_run_id is: ${global.github_run_id}`);
+        global.allure_results_directory = 'allure-results-p/3';
+        core.info(`allure_results_directory is: ${global.allure_results_directory}`);
+        global.allure_server = 'http://10.90.2.5:6060/allure-api';
+        core.info(`allure_server is: ${global.allure_server}`);
+        //global.project_id = 'test-custom-local-ts'
+        global.project_id = 'not-set';
+        core.info(`project_id is: ${global.project_id}`);
+        global.security_user = 'allure_admin';
+        core.info(`allure_user is: ${global.security_user}`);
+        global.security_password = 'Admin#9364';
+        core.debug(`password is: ${global.security_password}`);
+        const temp_token = yield (0, authenticate_1.authenticate)();
+        if (temp_token !== undefined) {
+            global.csrf_access_token = temp_token.split(';').at(0) || 'undefined';
+        }
+        else
+            global.csrf_access_token = 'undefined';
+        global.workspace = __dirname;
+        global.results_directory = path_1.default.join(global.workspace, global.allure_results_directory);
+    });
+}
+exports.prepareLocal = prepareLocal;
+//# sourceMappingURL=prepare.js.map
 
 /***/ }),
 
@@ -305,32 +378,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateReport = exports.uploadResults = exports.create = void 0;
+exports.generateReport = exports.uploadResults = void 0;
 const axios_handler_1 = __importDefault(__nccwpck_require__(6481));
 const core = __importStar(__nccwpck_require__(2186));
 const promises_1 = __nccwpck_require__(3292);
 const fs_1 = __nccwpck_require__(7147);
 const path_1 = __importDefault(__nccwpck_require__(1017));
-function create() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/projects`, { id: global.project_id });
-            core.debug(`response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message} | return: ${resp.status}|${resp.data['meta_data'].message}`);
-            return `${resp.status}|${resp.data['meta_data'].message}`;
-        }
-        catch (error) {
-            if (error instanceof Error) {
-                core.setFailed(error.message);
-                return `error: ${error}`;
-            }
-            else {
-                core.error(`error: ${error}`);
-                return `error: ${error}`;
-            }
-        }
-    });
-}
-exports.create = create;
+/*export async function create(): Promise<string> {
+  try {
+    const resp: AxiosResponse = await axios.post(
+      `${global.allure_server}/allure-docker-service/projects`,
+      {id: global.project_id}
+    )
+    core.debug(
+      `response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message} | return: ${resp.status}|${resp.data['meta_data'].message}`
+    )
+
+    return `${resp.status}|${resp.data['meta_data'].message}`
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
+    }
+  }
+}*/
 function uploadResults(directory) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = yield (0, promises_1.readdir)(directory);
@@ -357,7 +431,9 @@ function uploadResults(directory) {
                     'Content-Type': 'application/json'
                 }
             });
-            core.debug(`response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`);
+            core.debug(`upload response status is: ${resp.status}`);
+            if (resp.status === 200)
+                core.debug(`meta: ${resp.data['meta_data'].message}`);
             return directory;
         }
         catch (error) {
@@ -399,12 +475,15 @@ exports.uploadResults = uploadResults;
 }*/
 function generateReport() {
     return __awaiter(this, void 0, void 0, function* () {
-        const execution_name = `Github Actions ${global.project_id} #${global.github_run_num}`;
-        const execution_from = `${global.github_server_url}/${global.github_repository}/actions/runs/${global.github_run_id}`;
+        const execution_name = encodeURIComponent(`${global.project_id} #${global.github_run_num}`);
+        const execution_from = encodeURIComponent(`${global.github_server_url}/${global.github_repository}/actions/runs/${global.github_run_id}`);
         const execution_type = 'github';
+        const url = `${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`;
         try {
-            const resp = yield axios_handler_1.default.get(`${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`);
-            core.debug(`response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`);
+            const resp = yield axios_handler_1.default.get(url);
+            core.debug(`generate response status is: ${resp.status}`);
+            if (resp.status === 200)
+                core.debug(`meta: ${resp.data['meta_data'].message}`);
             core.debug(`report url is ${resp.data.data.report_url}`);
             return resp.data.data.report_url;
         }
