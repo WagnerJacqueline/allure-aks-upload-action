@@ -45,7 +45,7 @@ export async function uploadResults(directory: string): Promise<string> {
   }
   const results_json: Results = {results}
   try {
-    await axios.post(
+    const resp: AxiosResponse = await axios.post(
       `${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
       JSON.stringify(results_json),
       {
@@ -53,6 +53,9 @@ export async function uploadResults(directory: string): Promise<string> {
           'Content-Type': 'application/json'
         }
       }
+    )
+    core.debug(
+      `response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`
     )
     return directory
   } catch (error) {
@@ -97,6 +100,9 @@ export async function generateReport(): Promise<string> {
   try {
     const resp: AxiosResponse = await axios.get(
       `${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`
+    )
+    core.debug(
+        `response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`
     )
     core.debug(`report url is ${resp.data.data.report_url}`)
     return resp.data.data.report_url

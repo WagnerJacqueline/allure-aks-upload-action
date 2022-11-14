@@ -53,7 +53,7 @@ function authenticate() {
             const { data, headers, status } = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/login`, { username: global.security_user, password: global.security_password });
             core.debug(JSON.stringify(data, null, 4));
             core.debug(JSON.stringify(headers, null, 4));
-            core.debug(`response status is: ${status}`);
+            core.debug(`authentication response status is: ${status}`);
             core.debug(`access token is: ${data.data.access_token}`);
             global.csrf_access_token_cookie = (_a = headers['set-cookie']) === null || _a === void 0 ? void 0 : _a.at(0);
             return (_b = headers['set-cookie']) === null || _b === void 0 ? void 0 : _b.filter(e => e.toString().includes('csrf_access_token')).at(0);
@@ -182,40 +182,35 @@ const authenticate_1 = __nccwpck_require__(2601);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // global.github_server_url = core.getInput('GITHUB_SERVER_URL')
             global.github_server_url = process.env.GITHUB_SERVER_URL;
             // global.github_server_url = 'https://test-github.com'
-            core.debug(`github_server_url is: ${global.github_server_url}`);
-            // global.github_repository = core.getInput('GITHUB_REPOSITORY')
+            core.info(`github_server_url is: ${global.github_server_url}`);
             global.github_repository = process.env.GITHUB_REPOSITORY;
             // global.github_repository = 'DedalusTestDIIT/test-dicom'
-            core.debug(`github_repository is: ${global.github_repository}`);
-            // global.github_repository_owner = core.getInput('GITHUB_REPOSITORY_OWNER')
+            core.info(`github_repository is: ${global.github_repository}`);
             global.github_repository_owner = process.env
                 .GITHUB_REPOSITORY_OWNER;
             // global.github_repository_owner = 'DedalusTestDIIT'
-            core.debug(`github_repository_owner is: ${global.github_repository_owner}`);
-            // global.github_run_num = core.getInput('GITHUB_RUN_NUMBER')
+            core.info(`github_repository_owner is: ${global.github_repository_owner}`);
             global.github_run_num = process.env.GITHUB_RUN_NUMBER;
             // global.github_run_num = '12345'
-            core.debug(`github_run_num is: ${global.github_run_num}`);
-            // global.github_run_id = core.getInput('GITHUB_RUN_ID')
+            core.info(`github_run_num is: ${global.github_run_num}`);
             global.github_run_id = process.env.GITHUB_RUN_ID;
             // global.github_run_id = '98765'
-            core.debug(`github_run_id is: ${global.github_run_id}`);
+            core.info(`github_run_id is: ${global.github_run_id}`);
             global.allure_results_directory = core.getInput('allure_results_directory');
             // global.allure_results_directory = 'allure-results'
-            core.debug(`allure_results_directory is: ${global.allure_results_directory}`);
+            core.info(`allure_results_directory is: ${global.allure_results_directory}`);
             global.allure_server = core.getInput('allure_server');
             // global.allure_server = 'http://10.90.2.5:6060/allure-api'
-            core.debug(`allure_server is: ${global.allure_server}`);
+            core.info(`allure_server is: ${global.allure_server}`);
             global.project_id = core.getInput('project_id');
             // global.project_id = 'test-custom-local-ts'
             // global.project_id = 'not-set'
-            core.debug(`project_id is: ${global.project_id}`);
+            core.info(`project_id is: ${global.project_id}`);
             global.security_user = core.getInput('allure_user');
             // global.security_user = 'allure_admin'
-            core.debug(`allure_user is: ${global.security_user}`);
+            core.info(`allure_user is: ${global.security_user}`);
             global.security_password = core.getInput('allure_password');
             // global.security_password = 'Admin#9364'
             core.debug(`password is: ${global.security_password}`);
@@ -239,7 +234,7 @@ function run() {
                 .map(item => item.name);
             core.debug(`# of dirs is: ${directoriesInDirectory.length}`);
             const repo = global.github_repository.split('/').at(1);
-            let report_url = '';
+            let report_url = ' ';
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
@@ -356,12 +351,13 @@ function uploadResults(directory) {
         }
         const results_json = { results };
         try {
-            yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
+            const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
             JSON.stringify(results_json), {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
+            core.debug(`response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`);
             return directory;
         }
         catch (error) {
@@ -408,6 +404,7 @@ function generateReport() {
         const execution_type = 'github';
         try {
             const resp = yield axios_handler_1.default.get(`${global.allure_server}/allure-docker-service/generate-report?project_id=${global.project_id}&execution_name=${execution_name}&execution_from=${execution_from}&execution_type=${execution_type}`);
+            core.debug(`response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message}}`);
             core.debug(`report url is ${resp.data.data.report_url}`);
             return resp.data.data.report_url;
         }
