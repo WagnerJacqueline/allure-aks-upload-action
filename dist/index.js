@@ -239,13 +239,12 @@ function run() {
                 .map(item => item.name);
             core.debug(`# of dirs is: ${directoriesInDirectory.length}`);
             const repo = global.github_repository.split('/').at(1);
-            let report_url;
+            let report_url = '';
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
                     yield (0, project_util_1.uploadResults)(path_1.default.join(global.results_directory, dir));
-                    report_url = yield (0, project_util_1.generateReport)();
-                    core.setOutput('report_url', `report_url for ${dir}: ${report_url}`);
+                    report_url = `${report_url + (yield (0, project_util_1.generateReport)())} - ${dir}| `;
                 }
             }
             else {
@@ -254,8 +253,8 @@ function run() {
                 }
                 yield (0, project_util_1.uploadResults)(global.results_directory);
                 report_url = yield (0, project_util_1.generateReport)();
-                core.setOutput('report_url', report_url);
             }
+            core.setOutput('report_url', report_url);
         }
         catch (error) {
             if (error instanceof Error)
