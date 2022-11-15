@@ -20,7 +20,7 @@ export async function uploadFiles(directory: string): Promise<string> {
       //form_data.append('[files]', fileStream))
     }
   }
-  core.debug(`number of results is ${form_data.getLengthSync()}`)
+  core.debug(`number of results is ${files.length}`)
   const resp: AxiosResponse = await axios.post(
     `${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}`,
     form_data,

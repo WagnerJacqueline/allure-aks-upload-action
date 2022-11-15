@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type {AxiosRequestConfig} from 'axios'
+import * as core from '@actions/core'
 
 const instance = axios.create({
   baseURL: global.allure_server
@@ -35,10 +36,13 @@ instance.interceptors.request.use(
 )
 
 instance.interceptors.response.use(response => {
+  core.debug(`STATUS: ${response.status}`)
+  core.debug(`DATA: ${response.data}`)
   return response
 })
 
 instance.interceptors.response.use(undefined, async error => {
+  core.debug(`ERROR: ${error.toString()}`)
   return error
 })
 
