@@ -190,7 +190,7 @@ function run() {
             })
                 .filter((item) => item.isDirectory())
                 .map(item => item.name);
-            core.debug(`# of dirs is: ${directoriesInDirectory.length}`);
+            core.info(`# of dirs is: ${directoriesInDirectory.length}`);
             const repo = global.github_repository.split('/').at(1);
             let report_url = ' ';
             if (directoriesInDirectory.length > 0) {
@@ -198,7 +198,7 @@ function run() {
                     global.project_id = `${repo}-${dir}`;
                     yield (0, project_util_1.uploadResults)(path_1.default.join(global.results_directory, dir));
                     core.debug(`finished upload of ${dir}`);
-                    report_url = `${dir}-${report_url + (yield (0, project_util_1.generateReport)())}|\n`;
+                    report_url = `${dir}-${report_url + (yield (0, project_util_1.generateReport)())}\n`;
                 }
             }
             else {
@@ -435,6 +435,7 @@ function uploadResults(directory) {
                 }
             });
             core.debug(`upload response status is: ${resp.status}`);
+            core.debug(JSON.stringify(resp, null, 4));
             if (resp.status === 200)
                 core.debug(`meta: ${resp.data['meta_data'].message}`);
             return directory;

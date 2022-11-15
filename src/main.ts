@@ -14,7 +14,7 @@ async function run(): Promise<void> {
       .filter((item: Dirent) => item.isDirectory())
       .map(item => item.name)
 
-    core.debug(`# of dirs is: ${directoriesInDirectory.length}`)
+    core.info(`# of dirs is: ${directoriesInDirectory.length}`)
 
     const repo = global.github_repository.split('/').at(1)
     let report_url = ' '
@@ -24,7 +24,7 @@ async function run(): Promise<void> {
         global.project_id = `${repo}-${dir}`
         await uploadResults(path.join(global.results_directory, dir))
         core.debug(`finished upload of ${dir}`)
-        report_url = `${dir}-${report_url + (await generateReport())}|\n`
+        report_url = `${dir}-${report_url + (await generateReport())}\n`
       }
     } else {
       if (global.project_id === 'not-set') {

@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
+  "name": "allure-aks-upload-action",
   "version": "0.0.0",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Action to upload allure-results to AKS Cluster",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -15,14 +15,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/WagnerJacqueline/allure-aks-upload-action.git"
   },
   "keywords": [
     "actions",
     "node",
-    "setup"
+    "setup",
+    "allure"
   ],
-  "author": "",
+  "author": "WagnerJacqueline",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.10.0",
