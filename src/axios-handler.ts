@@ -43,6 +43,7 @@ instance.interceptors.response.use(response => {
 
 instance.interceptors.response.use(undefined, async error => {
   core.debug(`ERROR: ${error.toString()}`)
+  core.debug(JSON.stringify(error.response.data))
   return error
 })
 

@@ -154,6 +154,7 @@ instance.interceptors.response.use(response => {
 });
 instance.interceptors.response.use(undefined, (error) => __awaiter(void 0, void 0, void 0, function* () {
     core.debug(`ERROR: ${error.toString()}`);
+    core.debug(JSON.stringify(error.response.data));
     return error;
 }));
 exports["default"] = instance;
@@ -429,7 +430,7 @@ function uploadFiles(directory) {
             }
         }
         core.debug(`number of results is ${files.length}`);
-        const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}`, form_data, {
+        const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, form_data, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
