@@ -196,7 +196,7 @@ function run() {
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
-                    yield (0, project_util_1.uploadResults)(path_1.default.join(global.results_directory, dir));
+                    yield (0, project_util_1.uploadFiles)(path_1.default.join(global.results_directory, dir));
                     core.debug(`finished upload of ${dir}`);
                     report_url = `${dir}-${report_url + (yield (0, project_util_1.generateReport)())}\n`;
                 }
@@ -205,7 +205,7 @@ function run() {
                 if (global.project_id === 'not-set') {
                     global.project_id = `${repo}`;
                 }
-                yield (0, project_util_1.uploadResults)(global.results_directory);
+                yield (0, project_util_1.uploadFiles)(global.results_directory);
                 report_url = yield (0, project_util_1.generateReport)();
             }
             core.setOutput('report_url', report_url);
@@ -379,104 +379,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateReport = exports.uploadResults = void 0;
+exports.generateReport = exports.uploadFiles = void 0;
 const axios_handler_1 = __importDefault(__nccwpck_require__(6481));
 const core = __importStar(__nccwpck_require__(2186));
 const promises_1 = __nccwpck_require__(3292);
 const fs_1 = __nccwpck_require__(7147);
 const path_1 = __importDefault(__nccwpck_require__(1017));
-/*export async function create(): Promise<string> {
-  try {
-    const resp: AxiosResponse = await axios.post(
-      `${global.allure_server}/allure-docker-service/projects`,
-      {id: global.project_id}
-    )
-    core.debug(
-      `response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message} | return: ${resp.status}|${resp.data['meta_data'].message}`
-    )
-
-    return `${resp.status}|${resp.data['meta_data'].message}`
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      core.setFailed(error.message)
-      return `error: ${error}`
-    } else {
-      core.error(`error: ${error}`)
-      return `error: ${error}`
-    }
-  }
-}*/
-function uploadResults(directory) {
+const form_data_1 = __importDefault(__nccwpck_require__(4334));
+function uploadFiles(directory) {
     return __awaiter(this, void 0, void 0, function* () {
         core.debug(`currently in dir ${directory}`);
         const files = yield (0, promises_1.readdir)(directory);
-        const results = [];
+        const form_data = new form_data_1.default();
         for (const file of files) {
             const file_path = path_1.default.join(directory, file);
             const stat = yield (0, promises_1.lstat)(file_path);
             if (stat.isFile()) {
                 const fileSync = (0, fs_1.readFileSync)(file_path, 'utf-8');
-                const encoded = Buffer.from(fileSync).toString('base64');
-                const decoded = Buffer.from(encoded).toString('utf-8');
-                const resultEntity = {
-                    file_name: file,
-                    content_base64: decoded
-                };
-                results.push(resultEntity);
+                //const fileStream = createReadStream(file_path, 'utf-8')
+                form_data.append('files[]', fileSync, file);
+                //form_data.append('[files]', fileStream))
             }
         }
-        const results_json = { results };
-        core.debug(`number of results is ${results.length}`);
-        try {
-            const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
-            JSON.stringify(results_json), {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            core.debug(`upload response status is: ${resp.status}`);
-            core.debug(JSON.stringify(resp.data, null, 4));
-            if (resp.status === 200)
-                core.debug(`meta: ${resp.data['meta_data'].message}`);
-            return directory;
-        }
-        catch (error) {
-            if (error instanceof Error) {
-                core.setFailed(error.message);
-                return `error: ${error}`;
+        core.debug(`number of results is ${form_data.getLengthSync()}`);
+        const resp = yield axios_handler_1.default.post(`${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}`, form_data, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
             }
-            else {
-                core.error(`error: ${error}`);
-                return `error: ${error}`;
-            }
-        }
+        });
+        core.debug(`upload response status is: ${resp.status}`);
+        core.debug(JSON.stringify(resp.data, null, 4));
+        if (resp.status === 200)
+            core.debug(`meta: ${resp.data['meta_data'].message}`);
+        return directory;
     });
 }
-exports.uploadResults = uploadResults;
-/*export async function uploadFiles(directory: string): Promise<string> {
-  const files = await readdir(directory)
-  const form_data = new FormData()
-  for (const file of files) {
-    const file_path = path.join(global.results_directory, file)
-    const stat = await lstat(file_path)
-    if (stat.isFile()) {
-      const fileSync = readFileSync(file_path, 'utf-8')
-      //const fileStream = createReadStream(file_path, 'utf-8')
-      form_data.append('[files]', fileSync, file)
-      //form_data.append('[files]', fileStream))
-    }
-  }
-  await axios.post(
-    `${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}`,
-    form_data,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }
-  )
-  return directory
-}*/
+exports.uploadFiles = uploadFiles;
 function generateReport() {
     return __awaiter(this, void 0, void 0, function* () {
         core.debug(`currently processing ${global.project_id} - generateReport`);
@@ -505,6 +443,72 @@ function generateReport() {
     });
 }
 exports.generateReport = generateReport;
+/*export async function create(): Promise<string> {
+  try {
+    const resp: AxiosResponse = await axios.post(
+      `${global.allure_server}/allure-docker-service/projects`,
+      {id: global.project_id}
+    )
+    core.debug(
+      `response status is: ${resp.statusText} meta: ${resp.data['meta_data'].message} | return: ${resp.status}|${resp.data['meta_data'].message}`
+    )
+
+    return `${resp.status}|${resp.data['meta_data'].message}`
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
+    }
+  }
+}*/
+/*export async function uploadResults(directory: string): Promise<string> {
+  core.debug(`currently in dir ${directory}`)
+  const files = await readdir(directory)
+  const results: ResultEntity[] = []
+  for (const file of files) {
+    const file_path = path.join(directory, file)
+    const stat = await lstat(file_path)
+    if (stat.isFile()) {
+      const fileSync = readFileSync(file_path, 'utf-8')
+      const encoded = Buffer.from(fileSync).toString('base64')
+      const decoded = Buffer.from(encoded).toString('utf-8')
+      const resultEntity: ResultEntity = {
+        file_name: file,
+        content_base64: decoded
+      }
+      results.push(resultEntity)
+    }
+  }
+  const results_json: Results = {results}
+  core.debug(`number of results is ${results.length}`)
+  try {
+    const resp: AxiosResponse = await axios.post(
+      `${global.allure_server}/allure-docker-service/send-results?project_id=${global.project_id}&force_project_creation=true`, //@TODO make project creation configurable
+      JSON.stringify(results_json),
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    core.debug(`upload response status is: ${resp.status}`)
+    core.debug(JSON.stringify(resp.data, null, 4))
+    if (resp.status === 200)
+      core.debug(`meta: ${resp.data['meta_data'].message}`)
+    return directory
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
+    }
+  }
+}*/
 //# sourceMappingURL=project-util.js.map
 
 /***/ }),

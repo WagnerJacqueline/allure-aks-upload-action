@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import {readdirSync, Dirent} from 'fs'
 import path from 'path'
-import {generateReport, uploadResults} from './project-util'
+import {generateReport, uploadFiles} from './project-util'
 import {prepareGH} from './prepare'
 
 async function run(): Promise<void> {
@@ -22,7 +22,7 @@ async function run(): Promise<void> {
     if (directoriesInDirectory.length > 0) {
       for (const dir of directoriesInDirectory) {
         global.project_id = `${repo}-${dir}`
-        await uploadResults(path.join(global.results_directory, dir))
+        await uploadFiles(path.join(global.results_directory, dir))
         core.debug(`finished upload of ${dir}`)
         report_url = `${dir}-${report_url + (await generateReport())}\n`
       }
@@ -30,7 +30,7 @@ async function run(): Promise<void> {
       if (global.project_id === 'not-set') {
         global.project_id = `${repo}`
       }
-      await uploadResults(global.results_directory)
+      await uploadFiles(global.results_directory)
       report_url = await generateReport()
     }
     core.setOutput('report_url', report_url)
