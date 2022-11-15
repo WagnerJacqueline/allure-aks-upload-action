@@ -57,7 +57,7 @@ export async function uploadResults(directory: string): Promise<string> {
       }
     )
     core.debug(`upload response status is: ${resp.status}`)
-    core.debug(JSON.stringify(resp, null, 4))
+    core.debug(JSON.stringify(resp.data, null, 4))
     if (resp.status === 200)
       core.debug(`meta: ${resp.data['meta_data'].message}`)
     return directory
@@ -97,6 +97,7 @@ export async function uploadResults(directory: string): Promise<string> {
 }*/
 
 export async function generateReport(): Promise<string> {
+  core.debug(`currently processing ${global.project_id} - generateReport`)
   const execution_name = encodeURIComponent(
     `${global.project_id} #${global.github_run_num}`
   )

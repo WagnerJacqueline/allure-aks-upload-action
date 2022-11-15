@@ -183,8 +183,8 @@ const prepare_1 = __nccwpck_require__(8837);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield (0, prepare_1.prepareGH)();
-            //await prepareLocal()
+            //await prepareGH()
+            yield (0, prepare_1.prepareLocal)();
             const directoriesInDirectory = (0, fs_1.readdirSync)(global.results_directory, {
                 withFileTypes: true
             })
@@ -435,7 +435,7 @@ function uploadResults(directory) {
                 }
             });
             core.debug(`upload response status is: ${resp.status}`);
-            core.debug(JSON.stringify(resp, null, 4));
+            core.debug(JSON.stringify(resp.data, null, 4));
             if (resp.status === 200)
                 core.debug(`meta: ${resp.data['meta_data'].message}`);
             return directory;
@@ -479,6 +479,7 @@ exports.uploadResults = uploadResults;
 }*/
 function generateReport() {
     return __awaiter(this, void 0, void 0, function* () {
+        core.debug(`currently processing ${global.project_id} - generateReport`);
         const execution_name = encodeURIComponent(`${global.project_id} #${global.github_run_num}`);
         const execution_from = encodeURIComponent(`${global.github_server_url}/${global.github_repository}/actions/runs/${global.github_run_id}`);
         const execution_type = 'github';
