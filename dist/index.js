@@ -183,8 +183,8 @@ const prepare_1 = __nccwpck_require__(8837);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            //await prepareGH()
-            yield (0, prepare_1.prepareLocal)();
+            yield (0, prepare_1.prepareGH)();
+            //await prepareLocal()
             const directoriesInDirectory = (0, fs_1.readdirSync)(global.results_directory, {
                 withFileTypes: true
             })
