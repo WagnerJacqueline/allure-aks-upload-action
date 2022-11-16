@@ -20,7 +20,13 @@ async function run(): Promise<void> {
     const repo = global.github_repository.split('/').at(1)
     let report_url = '\n'
 
-    const rows: SummaryTableRow = []
+    const rows: SummaryTableRow[] = [
+      [
+        {data: 'Name', header: true},
+        {data: 'URL', header: true}
+      ]
+    ]
+    const row: SummaryTableRow = []
 
     if (directoriesInDirectory.length > 0) {
       for (const dir of directoriesInDirectory) {
@@ -29,18 +35,10 @@ async function run(): Promise<void> {
         core.debug(`finished upload of ${dir}`)
         const generatedUrl = await generateReport()
         report_url = `${report_url}${dir}: ${generatedUrl}\n`
-        rows.push(dir, generatedUrl)
+        row.push(dir, generatedUrl)
+        rows.push(row)
       }
-      await core.summary
-        .addHeading('Allure Report URLs')
-        .addTable([
-          [
-            {data: 'Name', header: true},
-            {data: 'URL', header: true}
-          ],
-          rows
-        ])
-        .write()
+      await core.summary.addHeading('Allure Report URLs').addTable(rows).write()
     } else {
       if (global.project_id === 'not-set') {
         global.project_id = `${repo}`

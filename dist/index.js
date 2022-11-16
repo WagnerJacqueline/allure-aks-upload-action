@@ -221,7 +221,13 @@ function run() {
             core.info(`# of dirs is: ${directoriesInDirectory.length}`);
             const repo = global.github_repository.split('/').at(1);
             let report_url = '\n';
-            const rows = [];
+            const rows = [
+                [
+                    { data: 'Name', header: true },
+                    { data: 'URL', header: true }
+                ]
+            ];
+            const row = [];
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
@@ -229,18 +235,10 @@ function run() {
                     core.debug(`finished upload of ${dir}`);
                     const generatedUrl = yield (0, project_util_1.generateReport)();
                     report_url = `${report_url}${dir}: ${generatedUrl}\n`;
-                    rows.push(dir, generatedUrl);
+                    row.push(dir, generatedUrl);
+                    rows.push(row);
                 }
-                yield core.summary
-                    .addHeading('Allure Report URLs')
-                    .addTable([
-                    [
-                        { data: 'Name', header: true },
-                        { data: 'URL', header: true }
-                    ],
-                    rows
-                ])
-                    .write();
+                yield core.summary.addHeading('Allure Report URLs').addTable(rows).write();
             }
             else {
                 if (global.project_id === 'not-set') {
