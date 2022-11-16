@@ -235,7 +235,7 @@ function run() {
                     core.debug(`finished upload of ${dir}`);
                     const generatedUrl = yield (0, project_util_1.generateReport)();
                     report_url = `${report_url}${dir}: ${generatedUrl}\n`;
-                    row.push(dir, generatedUrl);
+                    row.push(dir, `[${generatedUrl}](${generatedUrl})`);
                     rows.push(row);
                 }
                 yield core.summary.addHeading('Allure Report URLs').addTable(rows).write();

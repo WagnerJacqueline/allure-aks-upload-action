@@ -35,7 +35,7 @@ async function run(): Promise<void> {
         core.debug(`finished upload of ${dir}`)
         const generatedUrl = await generateReport()
         report_url = `${report_url}${dir}: ${generatedUrl}\n`
-        row.push(dir, generatedUrl)
+        row.push(dir, `[${generatedUrl}](${generatedUrl})`)
         rows.push(row)
       }
       await core.summary.addHeading('Allure Report URLs').addTable(rows).write()
