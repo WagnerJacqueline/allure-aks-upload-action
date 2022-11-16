@@ -8,7 +8,7 @@ import {SummaryTableRow} from '@actions/core/lib/summary'
 async function run(): Promise<void> {
   try {
     await prepareGH()
-    // await prepareLocal()
+    //await prepareLocal()
     const directoriesInDirectory = readdirSync(global.results_directory, {
       withFileTypes: true
     })
@@ -26,10 +26,10 @@ async function run(): Promise<void> {
         {data: 'URL', header: true}
       ]
     ]
-    const row: SummaryTableRow = []
 
     if (directoriesInDirectory.length > 0) {
       for (const dir of directoriesInDirectory) {
+        const row: SummaryTableRow = []
         global.project_id = `${repo}-${dir}`
         await uploadFiles(path.join(global.results_directory, dir))
         core.debug(`finished upload of ${dir}`)

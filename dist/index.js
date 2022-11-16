@@ -212,7 +212,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield (0, prepare_1.prepareGH)();
-            // await prepareLocal()
+            //await prepareLocal()
             const directoriesInDirectory = (0, fs_1.readdirSync)(global.results_directory, {
                 withFileTypes: true
             })
@@ -227,9 +227,9 @@ function run() {
                     { data: 'URL', header: true }
                 ]
             ];
-            const row = [];
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
+                    const row = [];
                     global.project_id = `${repo}-${dir}`;
                     yield (0, project_util_1.uploadFiles)(path_1.default.join(global.results_directory, dir));
                     core.debug(`finished upload of ${dir}`);
