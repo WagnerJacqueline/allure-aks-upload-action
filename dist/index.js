@@ -212,7 +212,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield (0, prepare_1.prepareGH)();
-            //await prepareLocal()
+            // await prepareLocal()
             const directoriesInDirectory = (0, fs_1.readdirSync)(global.results_directory, {
                 withFileTypes: true
             })
@@ -220,14 +220,27 @@ function run() {
                 .map(item => item.name);
             core.info(`# of dirs is: ${directoriesInDirectory.length}`);
             const repo = global.github_repository.split('/').at(1);
-            let report_url = ' ';
+            let report_url = '\n';
+            const rows = [];
             if (directoriesInDirectory.length > 0) {
                 for (const dir of directoriesInDirectory) {
                     global.project_id = `${repo}-${dir}`;
                     yield (0, project_util_1.uploadFiles)(path_1.default.join(global.results_directory, dir));
                     core.debug(`finished upload of ${dir}`);
-                    report_url = `${dir}-${report_url + (yield (0, project_util_1.generateReport)())}\n`;
+                    const generatedUrl = yield (0, project_util_1.generateReport)();
+                    report_url = `${report_url}${dir}: ${generatedUrl}\n`;
+                    rows.push(dir, generatedUrl);
                 }
+                yield core.summary
+                    .addHeading('Allure Report URLs')
+                    .addTable([
+                    [
+                        { data: 'Name', header: true },
+                        { data: 'URL', header: true }
+                    ],
+                    rows
+                ])
+                    .write();
             }
             else {
                 if (global.project_id === 'not-set') {

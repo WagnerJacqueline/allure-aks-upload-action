@@ -3,11 +3,12 @@ import {readdirSync, Dirent} from 'fs'
 import path from 'path'
 import {generateReport, uploadFiles} from './project-util'
 import {prepareGH} from './prepare'
+import {SummaryTableRow} from '@actions/core/lib/summary'
 
 async function run(): Promise<void> {
   try {
     await prepareGH()
-    //await prepareLocal()
+    // await prepareLocal()
     const directoriesInDirectory = readdirSync(global.results_directory, {
       withFileTypes: true
     })
@@ -17,15 +18,29 @@ async function run(): Promise<void> {
     core.info(`# of dirs is: ${directoriesInDirectory.length}`)
 
     const repo = global.github_repository.split('/').at(1)
-    let report_url = ' '
+    let report_url = '\n'
+
+    const rows: SummaryTableRow = []
 
     if (directoriesInDirectory.length > 0) {
       for (const dir of directoriesInDirectory) {
         global.project_id = `${repo}-${dir}`
         await uploadFiles(path.join(global.results_directory, dir))
         core.debug(`finished upload of ${dir}`)
-        report_url = `${dir}-${report_url + (await generateReport())}\n`
+        const generatedUrl = await generateReport()
+        report_url = `${report_url}${dir}: ${generatedUrl}\n`
+        rows.push(dir, generatedUrl)
       }
+      await core.summary
+        .addHeading('Allure Report URLs')
+        .addTable([
+          [
+            {data: 'Name', header: true},
+            {data: 'URL', header: true}
+          ],
+          rows
+        ])
+        .write()
     } else {
       if (global.project_id === 'not-set') {
         global.project_id = `${repo}`
