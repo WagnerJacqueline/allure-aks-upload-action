@@ -235,8 +235,9 @@ function run() {
                     core.debug(`finished upload of ${dir}`);
                     const generatedUrl = yield (0, project_util_1.generateReport)();
                     report_url = `${report_url}${dir}: ${generatedUrl}\n`;
-                    row.push(dir, `[${generatedUrl}](<${generatedUrl}>)`);
+                    row.push(dir, `${generatedUrl}`);
                     rows.push(row);
+                    yield (0, project_util_1.cleanResults)();
                 }
                 yield core.summary.addHeading('Allure Report URLs').addTable(rows).write();
             }
@@ -246,6 +247,7 @@ function run() {
                 }
                 yield (0, project_util_1.uploadFiles)(global.results_directory);
                 report_url = yield (0, project_util_1.generateReport)();
+                yield (0, project_util_1.cleanResults)();
             }
             core.setOutput('report_url', report_url);
         }
@@ -418,7 +420,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateReport = exports.uploadFiles = void 0;
+exports.cleanResults = exports.generateReport = exports.uploadFiles = void 0;
 const axios_handler_1 = __importDefault(__nccwpck_require__(6481));
 const core = __importStar(__nccwpck_require__(2186));
 const promises_1 = __nccwpck_require__(3292);
@@ -482,6 +484,29 @@ function generateReport() {
     });
 }
 exports.generateReport = generateReport;
+function cleanResults() {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.debug(`currently processing ${global.project_id} - generateReport`);
+        /*curl -X GET "http://10.90.2.5:6060/allure-api/allure-docker-service/clean-results?project_id=default" -H  "accept: */
+        const url = `${global.allure_server}/allure-docker-service/clean-results?project_id=${global.project_id}`;
+        try {
+            const resp = yield axios_handler_1.default.get(url);
+            core.debug(`generate response status is: ${resp.status}`);
+            return `cleaned ${global.project_id}`;
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+                return `error: ${error}`;
+            }
+            else {
+                core.error(`error: ${error}`);
+                return `error: ${error}`;
+            }
+        }
+    });
+}
+exports.cleanResults = cleanResults;
 /*export async function create(): Promise<string> {
   try {
     const resp: AxiosResponse = await axios.post(

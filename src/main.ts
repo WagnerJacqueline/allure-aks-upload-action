@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import {readdirSync, Dirent} from 'fs'
 import path from 'path'
-import {generateReport, uploadFiles} from './project-util'
+import {cleanResults, generateReport, uploadFiles} from './project-util'
 import {prepareGH} from './prepare'
 import {SummaryTableRow} from '@actions/core/lib/summary'
 
@@ -35,8 +35,9 @@ async function run(): Promise<void> {
         core.debug(`finished upload of ${dir}`)
         const generatedUrl = await generateReport()
         report_url = `${report_url}${dir}: ${generatedUrl}\n`
-        row.push(dir, `[${generatedUrl}](<${generatedUrl}>)`)
+        row.push(dir, `${generatedUrl}`)
         rows.push(row)
+        await cleanResults()
       }
       await core.summary.addHeading('Allure Report URLs').addTable(rows).write()
     } else {
@@ -45,6 +46,7 @@ async function run(): Promise<void> {
       }
       await uploadFiles(global.results_directory)
       report_url = await generateReport()
+      await cleanResults()
     }
     core.setOutput('report_url', report_url)
   } catch (error: unknown) {

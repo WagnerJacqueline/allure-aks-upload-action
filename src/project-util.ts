@@ -66,6 +66,25 @@ export async function generateReport(): Promise<string> {
   }
 }
 
+export async function cleanResults(): Promise<string> {
+  core.debug(`currently processing ${global.project_id} - generateReport`)
+  /*curl -X GET "http://10.90.2.5:6060/allure-api/allure-docker-service/clean-results?project_id=default" -H  "accept: */
+  const url = `${global.allure_server}/allure-docker-service/clean-results?project_id=${global.project_id}`
+  try {
+    const resp: AxiosResponse = await axios.get(url)
+    core.debug(`generate response status is: ${resp.status}`)
+    return `cleaned ${global.project_id}`
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+      return `error: ${error}`
+    } else {
+      core.error(`error: ${error}`)
+      return `error: ${error}`
+    }
+  }
+}
+
 export interface Results {
   results?: ResultEntity[] | null
 }
