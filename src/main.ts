@@ -35,7 +35,7 @@ async function run(): Promise<void> {
         core.debug(`finished upload of ${dir}`)
         const generatedUrl = await generateReport()
         report_url = `${report_url}${dir}: ${generatedUrl}\n`
-        row.push(dir, `<a href="">${generatedUrl}</a>`)
+        row.push(dir, `<a href="${generatedUrl}">${generatedUrl}</a>`)
         rows.push(row)
         await cleanResults()
       }
