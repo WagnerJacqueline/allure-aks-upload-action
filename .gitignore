@@ -101,3 +101,4 @@ lib/**/*
 .idea
 # result folders for local testing
 lib/allure-*
+megalinter-reports/
