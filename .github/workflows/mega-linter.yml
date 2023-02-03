@@ -31,6 +31,14 @@ jobs:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 0 # If you use VALIDATE_ALL_CODEBASE = true, you can remove this line to improve performances
 
+      - name: Set Node.js 16.x
+        uses: actions/setup-node@v3.6.0
+        with:
+          node-version: 16.x
+
+      - name: Install dependencies
+        run: npm ci
+
       # MegaLinter
       - name: MegaLinter
         id: ml
